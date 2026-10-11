@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Track {
+  MEDIA
+  CREATOR
+  TASTEMAKER
+  PRIVATE_CIRCLE
+  BRAND
+}
+enum MemberStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+enum RsvpStatus {
+  CONFIRMED
+  WAITLIST
+  CANCELLED
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  passwordHash String
+  fullName String
+  track Track
+  status MemberStatus @default(PENDING)
+  points Int @default(0)
+  rank String @default("Bronze")
+  createdAt DateTime @default(now())
+  rsvps Rsvp[]
+  savedEvents SavedEvent[]
+  ledger PointsLedger[]
+}
+model Event {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  description String @default("")
+  category String
+  area String
+  venue String
+  venueHost String
+  startsAt DateTime
+  capacity Int
+  confirmed Int @default(0)
+  eligibleTracks String[]
+  image String
+  createdAt DateTime @default(now())
+  rsvps Rsvp[]
+  savedBy SavedEvent[]
+}
+model Rsvp {
+  id String @id @default(cuid())
+  userId String
+  eventId String
+  status RsvpStatus @default(CONFIRMED)
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+  @@unique([userId, eventId])
+}
+model SavedEvent {
+  userId String
+  eventId String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+  @@id([userId, eventId])
+}
+model PointsLedger {
+  id String @id @default(cuid())
+  userId String
+  reason String
+  points Int
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+}
+model Referral {
+  id String @id @default(cuid())
+  referrerId String
+  referredEmail String
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+}
+model Artist {
+  id String @id @default(cuid())
+  name String
+  role String
+  bio String @default("")
+  image String
+  instagram String?
+  youtube String?
+  active Boolean @default(true)
+}
+model HostInquiry {
+  id String @id @default(cuid())
+  name String
+  email String
+  whatsapp String
+  date DateTime?
+  guests Int?
+  area String?
+  occasion String
+  package String
+  createdAt DateTime @default(now())
+}
+model NewsletterSubscriber {
+  id String @id @default(cuid())
+  email String @unique
+  createdAt DateTime @default(now())
+}
